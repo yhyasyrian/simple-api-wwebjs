@@ -1,0 +1,69 @@
+# Dependency directories (installed in container via npm install)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+# Note: package-lock.json and yarn.lock SHOULD be included for reproducible builds
+
+# WhatsApp Web.js session and cache directories
+# These are mounted as volumes in docker-compose.yml for persistence
+session/
+.wwebjs_cache/
+
+# Environment files (loaded via env_file in docker-compose.yml)
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env*.local
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# Docker files (don't need to copy into image)
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.*.yml
+
+# Documentation (not needed in container)
+README.md
+*.md
+docs/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing and coverage
+coverage/
+.nyc_output/
+test/
+tests/
+*.test.js
+*.spec.js
+
+# Log files
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+.cache/
+
+# Build artifacts (if any)
+dist/
+build/
+*.tgz

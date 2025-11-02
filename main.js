@@ -13,6 +13,10 @@ const session = new Client({
 		dataPath: "session",
 		clientId: "primary",
 	}),
+	puppeteer:{
+		executablePath:process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
+		args:'--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --single-process --no-zygote'.split(' ')
+	}
 });
 let tokenQr = null;
 session.on("qr", (qr) => {
