@@ -5,11 +5,8 @@ const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
 
-// Ensure crashpad directory exists before initializing Puppeteer
-const crashpadDir = "/tmp/chromium-crashpad";
-if (!fs.existsSync(crashpadDir)) {
-	fs.mkdirSync(crashpadDir, { recursive: true, mode: 0o777 });
-}
+// Note: Chromium crash reporting (crashpad) is problematic in some Docker images.
+// We explicitly disable crashpad via Puppeteer args below to avoid startup failures.
 
 const app = express();
 app.use(express.json());
@@ -23,13 +20,16 @@ const session = new Client({
 	}),
 	puppeteer:{
 		executablePath:process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
+		headless: true,
 		args:[
 			'--no-sandbox',
 			'--disable-setuid-sandbox',
 			'--disable-dev-shm-usage',
 			'--disable-gpu',
 			'--disable-software-rasterizer',
-			'--crashpad-database-path=/tmp/chromium-crashpad',
+			'--disable-crashpad',
+			'--no-zygote',
+			'--user-data-dir=/tmp/chrome-user-data',
 			'--disable-background-networking',
 			'--disable-background-timer-throttling',
 			'--disable-backgrounding-occluded-windows',
@@ -37,7 +37,7 @@ const session = new Client({
 			'--disable-client-side-phishing-detection',
 			'--disable-default-apps',
 			'--disable-extensions',
-			'--disable-features=TranslateUI,BlinkGenPropertyTrees',
+			'--disable-features=Crashpad,TranslateUI,BlinkGenPropertyTrees',
 			'--disable-hang-monitor',
 			'--disable-ipc-flooding-protection',
 			'--disable-popup-blocking',
