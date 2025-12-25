@@ -13,6 +13,23 @@ const session = new Client({
 		dataPath: "session",
 		clientId: "primary",
 	}),
+	puppeteer: {
+		executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || "/usr/bin/google-chrome-stable",
+		headless: true,
+		args: [
+			"--no-sandbox",
+			"--disable-setuid-sandbox",
+			"--disable-dev-shm-usage",
+			"--disable-gpu",
+			"--no-zygote",
+			// Use a unique temp directory for user data to avoid profile lock conflicts
+			`--user-data-dir=/tmp/chrome-user-data-${Date.now()}`,
+			// Disable profile lock check (safe in containers where we control the lifecycle)
+			"--disable-features=ChromeWhatsNewUI",
+			"--disable-extensions",
+			"--disable-background-networking",
+		],
+	},
 });
 let tokenQr = null;
 session.on("qr", (qr) => {
@@ -54,6 +71,7 @@ app.post("/whatsapp/sendmessage/", async (req, res) => {
 	}
 });
 session.initialize();
-app.listen(process.env.PORT, () => {
-	console.log(`Server is running on port ${process.env.PORT}`);
+const port = Number(process.env.PORT) || 3000;
+app.listen(port, () => {
+	console.log(`Server is running on port ${port}`);
 });
