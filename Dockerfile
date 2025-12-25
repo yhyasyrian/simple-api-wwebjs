@@ -34,9 +34,10 @@ RUN if getent passwd 1000 > /dev/null 2>&1; then \
     # Ensure whatsapp group exists with GID 1000
     (getent group 1000 > /dev/null 2>&1 || groupadd -g 1000 whatsapp)
 
-# Create necessary directories for WhatsApp Web.js session storage
-RUN mkdir -p session .wwebjs_cache /tmp/.X11-unix && \
-    chmod 1777 /tmp/.X11-unix
+# Create necessary directories for WhatsApp Web.js session storage and Chromium
+RUN mkdir -p session .wwebjs_cache /tmp/.X11-unix /tmp/chromium-crashpad && \
+    chmod 1777 /tmp/.X11-unix && \
+    chmod 755 /tmp/chromium-crashpad
 
 # Install runuser for switching users in entrypoint
 RUN apt-get update && \

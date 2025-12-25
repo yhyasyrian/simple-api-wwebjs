@@ -14,8 +14,37 @@ const session = new Client({
 		clientId: "primary",
 	}),
 	puppeteer:{
-		executablePath:process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
-		args:'--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --single-process --no-zygote'.split(' ')
+		executablePath:process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
+		args:[
+			'--no-sandbox',
+			'--disable-setuid-sandbox',
+			'--disable-dev-shm-usage',
+			'--disable-gpu',
+			'--disable-software-rasterizer',
+			'--disable-crashpad',
+			'--disable-background-networking',
+			'--disable-background-timer-throttling',
+			'--disable-backgrounding-occluded-windows',
+			'--disable-breakpad',
+			'--disable-client-side-phishing-detection',
+			'--disable-default-apps',
+			'--disable-extensions',
+			'--disable-features=TranslateUI',
+			'--disable-hang-monitor',
+			'--disable-ipc-flooding-protection',
+			'--disable-popup-blocking',
+			'--disable-prompt-on-repost',
+			'--disable-renderer-backgrounding',
+			'--disable-sync',
+			'--disable-translate',
+			'--metrics-recording-only',
+			'--no-first-run',
+			'--no-default-browser-check',
+			'--safebrowsing-disable-auto-update',
+			'--enable-automation',
+			'--password-store=basic',
+			'--use-mock-keychain'
+		]
 	}
 });
 let tokenQr = null;
