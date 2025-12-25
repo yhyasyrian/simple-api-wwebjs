@@ -27,6 +27,7 @@ const session = new Client({
 			'--disable-dev-shm-usage',
 			'--disable-gpu',
 			'--disable-software-rasterizer',
+			'--disable-crash-reporter',
 			'--disable-crashpad',
 			'--no-zygote',
 			'--user-data-dir=/tmp/chrome-user-data',

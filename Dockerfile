@@ -1,17 +1,34 @@
-FROM lscr.io/linuxserver/chromium:latest
+FROM node:22-bookworm-slim
 
-# Set environment variables for Puppeteer and Chromium
+# Puppeteer troubleshooting (Docker): install Chromium + runtime deps, and run with --no-sandbox.
 ENV DEBIAN_FRONTEND=noninteractive \
     PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH="/usr/bin/chromium" \
     CHROME_PATH="/usr/bin/chromium" \
-    PDF_CHROME_PATH="/usr/bin/chromium" \
     PUPPETEER_ARGS="--no-sandbox --disable-setuid-sandbox --disable-gpu --disable-dev-shm-usage"
 
-# Install Node.js 22 (using NodeSource repository)
-RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
-    apt-get install -y --no-install-recommends nodejs && \
-    rm -rf /var/lib/apt/lists/*
+# Install Chromium and common runtime dependencies needed by headless Chromium.
+# (Keeping the list slightly broad to avoid missing-lib crashes across environments.)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    chromium \
+    ca-certificates \
+    fonts-liberation \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libcups2 \
+    libdrm2 \
+    libgbm1 \
+    libgtk-3-0 \
+    libnspr4 \
+    libnss3 \
+    libx11-xcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    xdg-utils \
+    util-linux \
+  && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
@@ -39,11 +56,6 @@ RUN mkdir -p session .wwebjs_cache /tmp/.X11-unix /tmp/chromium-crashpad && \
     chmod 1777 /tmp/.X11-unix && \
     chmod 777 /tmp/chromium-crashpad && \
     chown -R 1000:1000 /tmp/chromium-crashpad
-
-# Install runuser for switching users in entrypoint
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends util-linux && \
-    rm -rf /var/lib/apt/lists/*
 
 # Copy entrypoint script for fixing permissions on mounted volumes
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
