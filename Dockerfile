@@ -49,7 +49,6 @@ RUN apt-get install -y \
 WORKDIR /app
 COPY . .
 RUN npm install
-RUN npm run build
 RUN chown -R $UID:$GID /app
 EXPOSE 3000
 USER $UID:$GID
