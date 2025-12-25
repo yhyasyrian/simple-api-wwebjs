@@ -8,6 +8,26 @@ require("dotenv").config();
 // Note: Chromium crash reporting (crashpad) is problematic in some Docker images.
 // We explicitly disable crashpad via Puppeteer args below to avoid startup failures.
 
+function resolveChromeExecutablePath() {
+	// Prefer explicit env var if it exists on disk, otherwise fall back to common paths.
+	const candidates = [
+		process.env.PUPPETEER_EXECUTABLE_PATH,
+		"/usr/bin/chromium",
+		"/usr/bin/chromium-browser",
+		"/usr/bin/google-chrome-stable",
+		"/usr/bin/google-chrome",
+	].filter(Boolean);
+	for (const p of candidates) {
+		try {
+			if (fs.existsSync(p)) return p;
+		} catch (_) {
+			// ignore
+		}
+	}
+	// Last resort: return the env var even if it doesn't exist, so the error is explicit.
+	return process.env.PUPPETEER_EXECUTABLE_PATH || "/usr/bin/chromium";
+}
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
@@ -19,7 +39,7 @@ const session = new Client({
 		clientId: "primary",
 	}),
 	puppeteer:{
-		executablePath:process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
+		executablePath: resolveChromeExecutablePath(),
 		headless: true,
 		args:[
 			'--no-sandbox',

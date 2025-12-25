@@ -7,8 +7,8 @@ RUN apt-get update -y && apt-get upgrade -y && apt-get install -y nano vim curl 
 RUN curl -sL https://deb.nodesource.com/setup_24.x -o /tmp/nodesource_setup.sh
 RUN bash /tmp/nodesource_setup.sh
 RUN apt-get install -y nodejs
-# install chromium
-RUN apt-get install -y \
+# install chromium + runtime deps
+RUN apt-get update -y && (apt-get install -y --no-install-recommends chromium || apt-get install -y --no-install-recommends chromium-browser) && apt-get install -y --no-install-recommends \
     libgbm-dev \
     libatk1.0-0 \
     libc6 \
@@ -44,13 +44,20 @@ RUN apt-get install -y \
     lsb-release \
     xdg-utils \
     wget \
-    libasound2t64
+    libasound2t64 \
+ && rm -rf /var/lib/apt/lists/*
+
+# Create a non-root user that matches the host UID/GID (for volume permissions)
+RUN groupadd -g $GID whatsapp && useradd -m -u $UID -g $GID -s /bin/bash whatsapp
+
+# Ensure Puppeteer has a sane default; main.js will still auto-detect if this path differs.
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 # init project
 WORKDIR /app
 COPY . .
 RUN npm install
 RUN chown -R $UID:$GID /app
 EXPOSE 3000
-USER $UID:$GID
+USER whatsapp
 # Start the application
 CMD ["npm", "start"]

@@ -6,13 +6,12 @@ services:
             args:
                 - UID=${UID:-1000}
                 - GID=${GID:-1000}
-        user: ${UID:-1000}:${GID:-1000}
         ports:
-            - "6520:6520"
-        env_file:
-            - .env
+            - "${PORT:-3000}:${PORT:-3000}"
         environment:
             - NODE_ENV=production
+            - PORT=${PORT:-3000}
+            - WHATSAPP_API_PASSWORD=${WHATSAPP_API_PASSWORD:-}
         restart: unless-stopped
         shm_size: 1gb
         cap_add:
