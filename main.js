@@ -21,7 +21,7 @@ const session = new Client({
 			'--disable-dev-shm-usage',
 			'--disable-gpu',
 			'--disable-software-rasterizer',
-			'--crashpad-database-path=/tmp/chromium-crashpad',
+			'--disable-crashpad',
 			'--disable-background-networking',
 			'--disable-background-timer-throttling',
 			'--disable-backgrounding-occluded-windows',
