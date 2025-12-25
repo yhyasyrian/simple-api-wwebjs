@@ -7,8 +7,17 @@ RUN apt-get update -y && apt-get upgrade -y && apt-get install -y nano vim curl 
 RUN curl -sL https://deb.nodesource.com/setup_24.x -o /tmp/nodesource_setup.sh
 RUN bash /tmp/nodesource_setup.sh
 RUN apt-get install -y nodejs
-# install chromium + runtime deps
-RUN apt-get update -y && (apt-get install -y --no-install-recommends chromium || apt-get install -y --no-install-recommends chromium-browser) && apt-get install -y --no-install-recommends \
+
+# Install a real browser binary (Google Chrome deb). Ubuntu's chromium packages often require snap, which won't work in Docker.
+RUN apt-get update -y && apt-get install -y --no-install-recommends ca-certificates wget gnupg \
+ && wget -qO- https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor > /usr/share/keyrings/google-linux-signing-keyring.gpg \
+ && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-linux-signing-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
+ && apt-get update -y \
+ && apt-get install -y --no-install-recommends google-chrome-stable \
+ && rm -rf /var/lib/apt/lists/*
+
+# Runtime deps for Chrome
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
     libgbm-dev \
     libatk1.0-0 \
     libc6 \
@@ -51,7 +60,7 @@ RUN apt-get update -y && (apt-get install -y --no-install-recommends chromium ||
 RUN groupadd -g $GID whatsapp && useradd -m -u $UID -g $GID -s /bin/bash whatsapp
 
 # Ensure Puppeteer has a sane default; main.js will still auto-detect if this path differs.
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
 # init project
 WORKDIR /app
 COPY . .

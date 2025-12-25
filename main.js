@@ -12,10 +12,10 @@ function resolveChromeExecutablePath() {
 	// Prefer explicit env var if it exists on disk, otherwise fall back to common paths.
 	const candidates = [
 		process.env.PUPPETEER_EXECUTABLE_PATH,
-		"/usr/bin/chromium",
-		"/usr/bin/chromium-browser",
 		"/usr/bin/google-chrome-stable",
 		"/usr/bin/google-chrome",
+		"/usr/bin/chromium",
+		"/usr/bin/chromium-browser",
 	].filter(Boolean);
 	for (const p of candidates) {
 		try {
