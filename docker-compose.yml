@@ -16,6 +16,3 @@ services:
         shm_size: 1gb
         cap_add:
             - SYS_ADMIN
-        volumes:
-            - ./session:/app/session
-            - ./.wwebjs_cache:/app/.wwebjs_cache
