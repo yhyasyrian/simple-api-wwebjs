@@ -17,6 +17,11 @@ if [ -d "/app/.wwebjs_cache" ]; then
     chmod -R 755 /app/.wwebjs_cache 2>/dev/null || true
 fi
 
+# Ensure crashpad directory exists and has proper permissions
+mkdir -p /tmp/chromium-crashpad 2>/dev/null || true
+chown -R ${PUID}:${PGID} /tmp/chromium-crashpad 2>/dev/null || true
+chmod -R 777 /tmp/chromium-crashpad 2>/dev/null || true
+
 # Get the username for the specified UID (fallback to whatsapp)
 USERNAME=$(getent passwd ${PUID} | cut -d: -f1)
 if [ -z "$USERNAME" ]; then

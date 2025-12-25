@@ -21,7 +21,7 @@ const session = new Client({
 			'--disable-dev-shm-usage',
 			'--disable-gpu',
 			'--disable-software-rasterizer',
-			'--disable-crashpad',
+			'--crashpad-database-path=/tmp/chromium-crashpad',
 			'--disable-background-networking',
 			'--disable-background-timer-throttling',
 			'--disable-backgrounding-occluded-windows',
@@ -29,7 +29,7 @@ const session = new Client({
 			'--disable-client-side-phishing-detection',
 			'--disable-default-apps',
 			'--disable-extensions',
-			'--disable-features=TranslateUI',
+			'--disable-features=TranslateUI,BlinkGenPropertyTrees',
 			'--disable-hang-monitor',
 			'--disable-ipc-flooding-protection',
 			'--disable-popup-blocking',
@@ -43,7 +43,8 @@ const session = new Client({
 			'--safebrowsing-disable-auto-update',
 			'--enable-automation',
 			'--password-store=basic',
-			'--use-mock-keychain'
+			'--use-mock-keychain',
+			'--single-process'
 		]
 	}
 });
