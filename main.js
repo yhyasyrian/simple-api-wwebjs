@@ -1,7 +1,15 @@
 const express = require("express");
 const {Client, LocalAuth} = require("whatsapp-web.js");
 const qr2 = require("qrcode");
+const fs = require("fs");
+const path = require("path");
 require("dotenv").config();
+
+// Ensure crashpad directory exists before initializing Puppeteer
+const crashpadDir = "/tmp/chromium-crashpad";
+if (!fs.existsSync(crashpadDir)) {
+	fs.mkdirSync(crashpadDir, { recursive: true, mode: 0o777 });
+}
 
 const app = express();
 app.use(express.json());
@@ -21,7 +29,7 @@ const session = new Client({
 			'--disable-dev-shm-usage',
 			'--disable-gpu',
 			'--disable-software-rasterizer',
-			'--disable-crashpad',
+			'--crashpad-database-path=/tmp/chromium-crashpad',
 			'--disable-background-networking',
 			'--disable-background-timer-throttling',
 			'--disable-backgrounding-occluded-windows',
@@ -43,8 +51,7 @@ const session = new Client({
 			'--safebrowsing-disable-auto-update',
 			'--enable-automation',
 			'--password-store=basic',
-			'--use-mock-keychain',
-			'--single-process'
+			'--use-mock-keychain'
 		]
 	}
 });
