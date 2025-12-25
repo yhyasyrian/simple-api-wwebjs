@@ -1,4 +1,4 @@
-FROM node:22
+FROM lscr.io/linuxserver/chromium:latest
 
 # Set environment variables for Puppeteer and Chromium
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -8,54 +8,36 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PDF_CHROME_PATH="/usr/bin/chromium" \
     PUPPETEER_ARGS="--no-sandbox --disable-setuid-sandbox --disable-gpu --disable-dev-shm-usage"
 
-# Install Chromium and required system dependencies for headless browser operation
-# Debian/Ubuntu uses 'apt-get' package manager
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    chromium \
-    chromium-sandbox \
-    fonts-liberation \
-    fonts-dejavu \
-    fontconfig \
-    fonts-noto-core \
-    libnss3 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdrm2 \
-    libxkbcommon0 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxfixes3 \
-    libxrandr2 \
-    libgbm1 \
-    libpango-1.0-0 \
-    libcairo2 \
-    libasound2 \
-    libatspi2.0-0 \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+# Install Node.js 22 (using NodeSource repository)
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
+    apt-get install -y --no-install-recommends nodejs && \
+    rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
 
 # Create non-root user for security (prevents running as root)
-# Debian uses 'groupadd' and 'useradd' instead of Alpine's 'addgroup' and 'adduser'
-RUN groupadd -g 1001 whatsapp && \
-    useradd -r -u 1001 -g whatsapp -m -d /home/whatsapp -s /bin/bash whatsapp
-
-
+# Using PUID/PGID 1000 to match LinuxServer.io convention
+# Safely create user/group only if not exists (to avoid conflicts with pre-existing GID/UID 1000)
+RUN getent group 1000 || groupadd -g 1000 whatsapp && \
+    getent passwd 1000 || useradd -r -u 1000 -g 1000 -m -d /home/whatsapp -s /bin/bash whatsapp
 
 # Create necessary directories for WhatsApp Web.js session storage
 RUN mkdir -p session .wwebjs_cache /tmp/.X11-unix && \
     chmod 1777 /tmp/.X11-unix
 
-# Set ownership of app directory to whatsapp user
-RUN chown -R whatsapp:whatsapp /app && \
-    chmod -R 755 /app
+# Install runuser for switching users in entrypoint
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends util-linux && \
+    rm -rf /var/lib/apt/lists/*
 
-# Switch to non-root user for security
-USER whatsapp
+# Copy entrypoint script for fixing permissions on mounted volumes
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Set ownership of app directory to whatsapp user
+RUN chown -R whatsapp:whatsapp /app || true && \
+    chmod -R 755 /app
 
 # Copy package files first for better Docker layer caching
 COPY package*.json ./
@@ -65,6 +47,12 @@ RUN npm i --only=production && npm cache clean --force
 
 # Copy application files
 COPY . .
+
+# Set ownership again after copying files
+RUN chown -R whatsapp:whatsapp /app || true
+
+# Set entrypoint (runs as root to fix permissions, then switches to whatsapp user)
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # Expose application port (default 3000, can be overridden via PORT env var)
 EXPOSE 3000

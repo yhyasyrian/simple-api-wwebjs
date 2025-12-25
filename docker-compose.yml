@@ -5,19 +5,27 @@ services:
             dockerfile: Dockerfile
         ports:
             - "6520:3000"
-        user: ${USER_ID}:${GROUP_ID}
+            - "3001:3001"
         env_file:
             - .env
         environment:
+            - PUID=1000
+            - PGID=1000
+            - TZ=Etc/UTC
             - NODE_ENV=production
-            # Skip Puppeteer's automatic Chromium download (we install via apt package)
+            # Skip Puppeteer's automatic Chromium download (Chromium comes from LinuxServer.io image)
             - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-            # Path to Chromium executable in Debian Linux
+            # Path to Chromium executable
             - PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-        restart: always
+        restart: unless-stopped
         # Shared memory size - required for Chromium to function properly
         # WhatsApp Web.js needs sufficient shared memory for browser operations
-        shm_size: 2gb
+        shm_size: 1gb
         # Add system capabilities required for Chromium sandboxing
         cap_add:
             - SYS_ADMIN
+        volumes:
+            # Persist WhatsApp Web.js session data
+            - ./session:/app/session
+            # Persist WhatsApp Web.js cache
+            - ./.wwebjs_cache:/app/.wwebjs_cache
