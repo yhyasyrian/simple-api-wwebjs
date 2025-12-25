@@ -7,10 +7,10 @@ services:
                 - UID=${UID:-1000}
                 - GID=${GID:-1000}
         ports:
-            - "${PORT:-3000}:${PORT:-3000}"
+            - "${PORT:-3000}:3000"
         environment:
             - NODE_ENV=production
-            - PORT=${PORT:-3000}
+            - PORT=3000
             - WHATSAPP_API_PASSWORD=${WHATSAPP_API_PASSWORD:-}
         restart: unless-stopped
         shm_size: 1gb
