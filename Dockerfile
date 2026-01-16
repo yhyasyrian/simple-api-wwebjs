@@ -1,73 +1,72 @@
-FROM node:22
+FROM ubuntu:24.04
 
-# Set environment variables for Puppeteer and Chromium
-ENV DEBIAN_FRONTEND=noninteractive \
-    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH="/usr/bin/chromium" \
-    CHROME_PATH="/usr/bin/chromium" \
-    PDF_CHROME_PATH="/usr/bin/chromium" \
-    PUPPETEER_ARGS="--no-sandbox --disable-setuid-sandbox --disable-gpu --disable-dev-shm-usage"
+ARG UID=1000
+ARG GID=1000
+# Install nodejs
+RUN apt-get update -y && apt-get upgrade -y && apt-get install -y nano vim curl wget git net-tools iputils-ping
+RUN curl -sL https://deb.nodesource.com/setup_24.x -o /tmp/nodesource_setup.sh
+RUN bash /tmp/nodesource_setup.sh
+RUN apt-get install -y nodejs
 
-# Install Chromium and required system dependencies for headless browser operation
-# Debian/Ubuntu uses 'apt-get' package manager
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    chromium \
-    chromium-sandbox \
-    fonts-liberation \
-    fonts-dejavu \
-    fontconfig \
-    fonts-noto-core \
-    libnss3 \
+# Install a real browser binary (Google Chrome deb). Ubuntu's chromium packages often require snap, which won't work in Docker.
+RUN apt-get update -y && apt-get install -y --no-install-recommends ca-certificates wget gnupg \
+ && wget -qO- https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor > /usr/share/keyrings/google-linux-signing-keyring.gpg \
+ && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-linux-signing-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
+ && apt-get update -y \
+ && apt-get install -y --no-install-recommends google-chrome-stable \
+ && rm -rf /var/lib/apt/lists/*
+
+# Runtime deps for Chrome
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
+    libgbm-dev \
     libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdrm2 \
-    libxkbcommon0 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxfixes3 \
-    libxrandr2 \
-    libgbm1 \
-    libpango-1.0-0 \
+    libc6 \
     libcairo2 \
-    libasound2 \
-    libatspi2.0-0 \
+    libcups2 \
+    libdbus-1-3 \
+    libexpat1 \
+    libfontconfig1 \
+    libgcc1 \
+    libgdk-pixbuf2.0-0 \
+    libglib2.0-0 \
+    libgtk-3-0 \
+    libnspr4 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libstdc++6 \
+    libx11-6 \
+    libx11-xcb1 \
+    libxcb1 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxi6 \
+    libxrandr2 \
+    libxrender1 \
+    libxss1 \
+    libxtst6 \
     ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+    fonts-liberation \
+    libnss3 \
+    lsb-release \
+    xdg-utils \
+    wget \
+    libasound2t64 \
+ && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
+# Create a non-root user that matches the host UID/GID (for volume permissions)
+RUN groupadd -g $GID whatsapp && useradd -m -u $UID -g $GID -s /bin/bash whatsapp
+
+# Ensure Puppeteer has a sane default; main.js will still auto-detect if this path differs.
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
+# init project
 WORKDIR /app
-
-# Create non-root user for security (prevents running as root)
-# Debian uses 'groupadd' and 'useradd' instead of Alpine's 'addgroup' and 'adduser'
-RUN groupadd -g 1001 whatsapp && \
-    useradd -r -u 1001 -g whatsapp -m -d /home/whatsapp -s /bin/bash whatsapp
-
-
-
-# Create necessary directories for WhatsApp Web.js session storage
-RUN mkdir -p session .wwebjs_cache /tmp/.X11-unix && \
-    chmod 1777 /tmp/.X11-unix
-
-# Set ownership of app directory to whatsapp user
-RUN chown -R whatsapp:whatsapp /app && \
-    chmod -R 755 /app
-
-# Switch to non-root user for security
-USER whatsapp
-
-# Copy package files first for better Docker layer caching
-COPY package*.json ./
-
-# Install production dependencies only
-RUN npm i --only=production && npm cache clean --force
-
-# Copy application files
 COPY . .
-
-# Expose application port (default 3000, can be overridden via PORT env var)
+RUN npm install
+RUN chown -R $UID:$GID /app
 EXPOSE 3000
-
+USER whatsapp
 # Start the application
 CMD ["npm", "start"]

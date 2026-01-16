@@ -24,6 +24,7 @@ session/
 .gitattributes
 
 # Docker files (don't need to copy into image)
+# Note: docker-entrypoint.sh IS needed in the image, so don't exclude it
 Dockerfile
 .dockerignore
 docker-compose.yml
